@@ -1,0 +1,26 @@
+{
+  "name": "wxrgen",
+  "version": "0.0.1",
+  "description": "WXR(XML) file generator for importing data to wordpress",
+  "main": "./src",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "xml",
+    "wordpress",
+    "export",
+    "import",
+    "wxr",
+    "generator"
+  ],
+  "author": "bckr75 <maximov.vsev@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "xmlbuilder": "^9.0.1"
+  },
+  "devDependencies": {},
+  "repository": {
+    "url": "git@github.com:bckr75/wxrgen.git"
+  }
+}
