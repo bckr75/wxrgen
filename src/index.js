@@ -348,7 +348,7 @@ module.exports = class Generator {
                 const value = attr.value;
                 product.ele('category', {
                     domain: 'pa_' + this.generateTaxonomy(name),
-                    nicename: value
+                    nicename: this.generateSlug(value)
                 }).cdata(value);
             });
 
