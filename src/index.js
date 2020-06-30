@@ -2,6 +2,7 @@ const xmlbuilder = require('xmlbuilder');
 
 const PRODUCT_VERSION = '3.9.2';
 
+//TODO: tags, users, etc
 module.exports = class Generator {
     /** @type {array} */
     generatedIds = [];
@@ -13,6 +14,13 @@ module.exports = class Generator {
     addedProductCategories = {};
     /** @type {object} */
     addedProductAttributes = {};
+
+    termsToAdd = [];
+    postsToAdd = [];
+    productsToAdd = [];
+    menusToAdd = [];
+    menuItemsToAdd = [];
+    attachmentsToAdd = [];
 
     /**
      * Generates pseudo random ID.
@@ -66,6 +74,173 @@ module.exports = class Generator {
     }
 
     /**
+     * Sets term to add to the beginning of document
+     * @param {object} term
+     * @return Generator
+     */
+    setTermToAdd(term) {
+        if (!term.hasOwnProperty('id')) {
+            term.id = this.rId();
+        }
+        const termExists = this.termsToAdd.some((item) => {
+            if (term.type === 'product_attribute') {
+                return (item.name === term.name && item.value === term.value);
+            } else {
+                if (term.type === 'category' && this.addedCategories.hasOwnProperty(term.name)) {
+                    return true;
+                }
+                if (term.type === 'product_cat' && this.addedProductCategories.hasOwnProperty(term.name)) {
+                    return true;
+                }
+                if (term.type === 'nav_menu' && this.addedMenus.hasOwnProperty(term.name)) {
+                    return true;
+                }
+                return item.name === term.name;
+            }
+        });
+
+        if (!termExists) {
+            this.termsToAdd.push(term);
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets menu to add to the  document
+     * @param {object} menu
+     * @return Generator
+     */
+    setMenuToAdd(menu) {
+        menu.type='nav_menu';
+
+        return this.setTermToAdd(menu);
+    }
+
+    /**
+     * Sets menu item to add to the document
+     * @param {object} menuItem
+     * @return Generator
+     */
+    setMenuItemToAdd(menuItem) {
+        if (!menuItem.hasOwnProperty('id')) {
+            menuItem.id = this.rId();
+        }
+        let menu_name = menuItem.menu_name;
+        let slug = this.generateSlug(menu_name);
+        this.setMenuToAdd({name: menu_name, slug})
+
+        const menuItemExists = this.menuItemsToAdd.some((item) => item.title === menuItem.title);
+        if (!menuItemExists) {
+            this.menuItemsToAdd.push(menuItem);
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets post to add to the  document
+     * @param {object} post
+     * @return Generator
+     */
+    setPostToAdd(post) {
+        if (Array.isArray(post.categories)) {
+            post.categories.forEach(cate => {
+                cate.type = 'category';
+                this.setTermToAdd(cate);
+            });
+        }
+        if (!post.hasOwnProperty('id')) {
+            post.id = this.rId();
+        }
+        const postExists = this.postsToAdd.some((item) => item.id === post.id);
+        if (!postExists) {
+            this.postsToAdd.push(post);
+        }
+
+        return this;
+    }
+
+    setProductToAdd(product) {
+        let images = product.images;
+        if (Array.isArray(images)) {
+            if (typeof images[0] === 'string') {
+                images = images.map((image) => {
+                    const id = this.rId();
+                    const title = image.split('/').pop().replace(/\?.*/, '');
+                    this.setAttachmentToAdd({id, title, url: image});
+                    return {id, title, url: image};
+                });
+            } else if (typeof images[0] === 'object') {
+                images = images.map((image) => {
+                    const id = image.id || this.rId();
+                    const url = image.url;
+                    const title = image.title || url.split('/').pop().replace(/\?.*/, '');
+                    this.setAttachmentToAdd({id, title, url});
+                    return {id, title, url};
+                });
+            }
+
+            product.images = images;
+        }
+
+        let categories = product.categories;
+        if (Array.isArray(categories)) {
+            categories.forEach(cate => {
+                if (typeof cate === 'string') {
+                    cate = {name: cate};
+                }
+                cate.type = 'product_cat';
+                this.setTermToAdd(cate);
+            });
+        } else if (typeof categories === 'string' && categories.indexOf(' > ') !== -1) {
+            categories = categories.split(' > ');
+            let cats = categories.map((el) => { return {name: el}; });
+
+            cats.reduce((carry, cate) => {
+                let slug = this.generateSlug(cate.name);
+                this.setTermToAdd({id: this.rId(), name: cate.name, parent_id: carry, slug, type: 'product_cat'});
+                return slug;
+            }, 0);
+        }
+        let attributes = product.attributes;
+        if (Array.isArray(attributes)) {
+            attributes.forEach(attr => {
+                this.setTermToAdd({name: attr.name, value: attr.value, type: 'product_attribute'});
+            });
+        }
+
+        if (!product.hasOwnProperty('id')) {
+            product.id = this.rId();
+        }
+
+        const productExists = this.productsToAdd.some((item) => item.id === product.id);
+        if (!productExists) {
+            this.productsToAdd.push(product);
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets attachment to add to the end of document
+     * @param {object} attachment
+     * @return Generator
+     */
+    setAttachmentToAdd(attachment) {
+        if (!attachment.hasOwnProperty('id')) {
+            attachment.id = this.rId();
+        }
+
+        const attachmentExists = this.attachmentsToAdd.some((item) => item.title === attachment.title)
+        if (!attachmentExists) {
+            this.attachmentsToAdd.push(attachment);
+        }
+
+        return this;
+    }
+
+    /**
      * Adds a post.
      * @param {number} id - post Id, if not provided, random ID will be generated.
      * @param {string} url - post permalink url.
@@ -106,8 +281,9 @@ module.exports = class Generator {
         if (Array.isArray(categories)) {
             categories.forEach(cate => {
                 const name = cate.name;
-                if (!this.addedCategories.includes(name)) {
-                    this.addCategory({name});
+                const categoryIsInQueue = this.termsToAdd.some((item) => item.name === name);
+                if (!categoryIsInQueue) {
+                    this.addCategory(cate);
                 }
             });
         }
@@ -290,7 +466,7 @@ module.exports = class Generator {
                 });
             } else if (typeof images[0] === 'object') {
                 images = images.map((image) => {
-                    const id = this.rId();
+                    const id = image.id || this.rId();
                     const url = image.url;
                     const title = image.title || url.split('/').pop().replace(/\?.*/, '');
                     return {id, title, url};
@@ -302,8 +478,10 @@ module.exports = class Generator {
                 if (typeof cate === 'string') {
                     cate = {name: cate};
                 }
-                const name = cate.name;
-                this.addProductCategory({name});
+                const categoryExists = this.termsToAdd.some((item) => item.name === cate.name);
+                if (!categoryExists) {
+                    this.addProductCategory(cate);
+                }
             });
         } else if (typeof categories === 'string' && categories.indexOf(' > ') !== -1) {
             categories = categories.split(' > ');
@@ -311,13 +489,19 @@ module.exports = class Generator {
 
             cats.reduce((carry, cate) => {
                 let slug = this.generateSlug(cate.name);
-                this.addProductCategory({id: this.rId(), name: cate.name, parent_id: carry, slug});
+                const categoryExists = this.termsToAdd.some((item) => item.name === cate.name);
+                if (!categoryExists) {
+                    this.addProductCategory({id: this.rId(), name: cate.name, parent_id: carry, slug, type: 'product_cat'});
+                }
                 return slug;
             }, 0)
         }
         if (Array.isArray(attributes)) {
             attributes.forEach(attr => {
-                this.addProductAttribute({name: attr.name, value: attr.value});
+                const attributeExists = this.termsToAdd.some((item) => item.name === attr.name && item.value === attr.value);
+                if (!attributeExists) {
+                    this.addProductAttribute({name: attr.name, value: attr.value, type: 'product_attribute'});
+                }
             });
         }
         let product = this.channel.ele('item');
@@ -436,9 +620,13 @@ module.exports = class Generator {
                 }]
             });
         }
+
         if (Array.isArray(images)) {
             for (const image of images) {
-                this.addAttachment({author: author, ...image})
+                const attachmentExists = this.attachmentsToAdd.some((item) => item.title === image.title);
+                if (!attachmentExists) {
+                    this.addAttachment({author: author, ...image});
+                }
             }
         }
 
@@ -906,5 +1094,43 @@ module.exports = class Generator {
             indent: "    ",
             newline: "\n"
         });
+    }
+
+    generateWXR() {
+        if (Array.isArray(this.termsToAdd)) {
+            for (const term of this.termsToAdd) {
+                if (term.type === 'category') {
+                    this.addCategory(term);
+                } else if (term.type === 'product_cat') {
+                    this.addProductCategory(term);
+                } else if (term.type === 'product_attribute') {
+                    this.addProductAttribute(term);
+                } else if (term.type === 'nav_menu') {
+                    this.addMenu(term);
+                }
+            }
+        }
+        if (Array.isArray(this.postsToAdd)) {
+            for (const post of this.postsToAdd) {
+                this.addPost(post);
+            }
+        }
+        if (Array.isArray(this.productsToAdd)) {
+            for (const product of this.productsToAdd) {
+                this.addProduct(product);
+            }
+        }
+        if (Array.isArray(this.menuItemsToAdd)) {
+            for (const menuItem of this.menuItemsToAdd) {
+                this.addMenuItem(menuItem);
+            }
+        }
+        if (Array.isArray(this.attachmentsToAdd)) {
+            for (const attachment of this.attachmentsToAdd) {
+                this.addAttachment(attachment);
+            }
+        }
+
+        return this.stringify();
     }
 }

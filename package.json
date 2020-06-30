@@ -1,7 +1,7 @@
 {
   "name": "wxrgen",
   "title": "WXR Generator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "WXR(XML) file generator for importing data to wordpress",
   "main": "./src",
   "scripts": {
