@@ -1087,31 +1087,29 @@ module.exports = class Generator {
     /**
      * Returns generated WMR(XML).
      *
-     * @param {boolean} pretty - whether to pretty print the output or not
-     * @param {string} indent - standard indentation
-     * @param {string} newline - new line character
+     * @param {boolean} options.pretty - whether to pretty print the output or not
+     * @param {string} options.indent - standard indentation
+     * @param {string} options.newline - new line character
      * @return string
      */
-    stringify({
-        pretty = false,
-        indent = '    ',
-        newline = '\n'
-    }) {
-        return this.xml.end({pretty, indent, newline});
+    stringify(options) {
+        return this.xml.end({
+            pretty: false,
+            indent: '    ',
+            newline: '\n',
+            ...options
+        });
     }
 
     /**
      * Returns well formed WXR
-     * @param {boolean} pretty - whether to pretty print the output or not
-     * @param {string} indent - standard indentation
-     * @param {string} newline - new line character
+     *
+     * @param {boolean} options.pretty - whether to pretty print the output or not
+     * @param {string} options.indent - standard indentation
+     * @param {string} options.newline - new line character
      * @return {string}
      */
-    generateWXR({
-        pretty = false,
-        indent = '    ',
-        newline = '\n'
-    }) {
+    generateWXR(options) {
         let catsToAdd = [];
         let pCatsToAdd = [];
         let pAttrsToAdd = [];
@@ -1170,6 +1168,6 @@ module.exports = class Generator {
             }
         }
 
-        return this.stringify({pretty, indent, newline});
+        return this.stringify(options);
     }
 }
