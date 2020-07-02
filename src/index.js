@@ -1098,17 +1098,41 @@ module.exports = class Generator {
     }
 
     generateWXR() {
+        let catsToAdd = [];
+        let pCatsToAdd = [];
+        let pAttrsToAdd = [];
+        let menusToAdd = [];
         if (Array.isArray(this.termsToAdd)) {
             for (const term of this.termsToAdd) {
                 if (term.type === 'category') {
-                    this.addCategory(term);
+                    catsToAdd.push(term);
                 } else if (term.type === 'product_cat') {
-                    this.addProductCategory(term);
+                    pCatsToAdd.push(term);
                 } else if (term.type === 'product_attribute') {
-                    this.addProductAttribute(term);
+                    pAttrsToAdd.push(term);
                 } else if (term.type === 'nav_menu') {
-                    this.addMenu(term);
+                    menusToAdd.push(term);
                 }
+            }
+        }
+        if (Array.isArray(catsToAdd)) {
+            for (const cat of catsToAdd) {
+                this.addCategory(cat);
+            }
+        }
+        if (Array.isArray(pCatsToAdd)) {
+            for (const pCat of pCatsToAdd) {
+                this.addProductCategory(pCat);
+            }
+        }
+        if (Array.isArray(pAttrsToAdd)) {
+            for (const pAttr of pAttrsToAdd) {
+                this.addProductAttribute(pAttr);
+            }
+        }
+        if (Array.isArray(menusToAdd)) {
+            for (const menu of menusToAdd) {
+                this.addMenu(menu);
             }
         }
         if (Array.isArray(this.postsToAdd)) {
