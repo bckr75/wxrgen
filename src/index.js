@@ -300,7 +300,7 @@ module.exports = class Generator {
         post.ele('wp:post_date').cdata(date.toISOString());
         post.ele('wp:comment_status').cdata(comment_status);
         post.ele('wp:ping_status').cdata(ping_status);
-        post.ele('post_name').cdata(title);
+        post.ele('post_name').cdata(slug);
         post.ele('wp:status').cdata(status);
         post.ele('wp:post_parent', {}, 0);
         post.ele('wp:menu_order', {}, 0);
@@ -455,6 +455,7 @@ module.exports = class Generator {
         stock = 1,
         stock_status = 'instock',
         downloadable_files = [],
+        price = regular_price,
         product_version = PRODUCT_VERSION
     }) {
         if (Array.isArray(images)) {
@@ -581,7 +582,7 @@ module.exports = class Generator {
             sale_price_dates_to, tax_status, tax_class, reviews_allowed, parent_id,
             manage_stock, backorders, sold_individually, weight, length, width, height, shipping_class, upsell_ids,
             crossell_ids, purchase_note, grouped_products, menu_order, virtual, downloadable, external_url, button_text,
-            download_limit, download_expiry, stock, stock_status, downloadable_files, product_version};
+            download_limit, download_expiry, stock, stock_status, downloadable_files, price, product_version};
 
         for (const stat of Object.entries(stats)) {
             const statName = stat[0];
