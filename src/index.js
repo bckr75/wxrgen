@@ -1092,7 +1092,7 @@ module.exports = class Generator {
      * @param {string} options.newline - new line character
      * @return string
      */
-    stringify(options) {
+    stringify(options= {}) {
         return this.xml.end({
             pretty: false,
             indent: '    ',
@@ -1109,7 +1109,7 @@ module.exports = class Generator {
      * @param {string} options.newline - new line character
      * @return {string}
      */
-    generateWXR(options) {
+    generateWXR(options= {}) {
         let catsToAdd = [];
         let pCatsToAdd = [];
         let pAttrsToAdd = [];
