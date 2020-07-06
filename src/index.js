@@ -300,7 +300,7 @@ module.exports = class Generator {
         post.ele('wp:post_date').cdata(date.toISOString());
         post.ele('wp:comment_status').cdata(comment_status);
         post.ele('wp:ping_status').cdata(ping_status);
-        post.ele('post_name').cdata(slug);
+        post.ele('wp:post_name').cdata(slug);
         post.ele('wp:status').cdata(status);
         post.ele('wp:post_parent', {}, 0);
         post.ele('wp:menu_order', {}, 0);
