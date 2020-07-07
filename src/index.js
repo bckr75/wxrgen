@@ -4,7 +4,7 @@ const PRODUCT_VERSION = '3.9.2';
 
 /**
  * WXR generator.
- * Allows you to form Wordpress WXR document for importing posts, pages, categories, tags, menus, menu items, users
+ * Allows you to form Wordpress WXR document for importing posts, pages, categories, tags, menus, menu items, users,
  * WooCommerce products, product categories and product attributes, media files for products and posts
  * @type {Generator}
  */
@@ -47,12 +47,12 @@ module.exports = class Generator {
     /**
      * Class constructor.
      *
-     * @param {string} name - site name
+     * @param {string} name - site title
      * @param {string} url - site url
      * @param {string} description - site description
      * @param {string} language - site language, default is en-US
-     * @param {string} base_site_url - base_site_url: same as url
-     * @param {string} base_blog_url - base_blog_url: same as url
+     * @param {string} base_site_url - same as url
+     * @param {string} base_blog_url - same as url
      */
     constructor({
         name,
@@ -81,17 +81,30 @@ module.exports = class Generator {
     }
 
     /**
-     * Sets term to add to the beginning of document
+     * Sets term to add to the beginning of document.
+     *
      * @see addCategory
      * @see addProductCategory
      * @see addProductAttribute
      * @see addTag
-     * @param {object} term
+     * @param {{name: string, type: string}} term
+     * @param {number|null} term.id - term id
+     * @param {string} term.name - term title
+     * @param {string|null} term.value - used in attributes, term value.
+     * @param {string|null} term.slug - term slug. If not provided, it will be generated from term title or value if it's an attribute.
+     * @param {string} term.type - term type, can be 'category', 'product_cat', 'product_attribute', 'nav_menu' and 'tag'
+     * @param {number|null} term.parent_id - term parent id if it exists.
+     * @param {string|null} term.description - description, usually empty string
+     * @param {string|null} term.taxonomy - term taxonomy, used in attributes, if none present, it will be generated from term title, e.g. 'pa_weight'
+     *
      * @return Generator
      */
     setTermToAdd(term) {
         if (!term.hasOwnProperty('id')) {
             term.id = this.rId();
+        }
+        if (!['category', 'product_cat', 'product_attribute', 'nav_menu', 'tag'].includes(term.type)) {
+            throw new Error('Invalid term type. Allowed are \'category\', \'product_cat\', \'product_attribute\', \'nav_menu\', \'tag\'');
         }
         const termExists = this.termsToAdd.some((item) => {
             if (term.type === 'product_attribute') {
@@ -121,18 +134,6 @@ module.exports = class Generator {
     }
 
     /**
-     * Sets menu to add to the document
-     * @see addMenu
-     * @param {object} menu
-     * @return Generator
-     */
-    setMenuToAdd(menu) {
-        menu.type = 'nav_menu';
-
-        return this.setTermToAdd(menu);
-    }
-
-    /**
      * Sets menu item to add to the document
      * @see addMenuItem
      * @param {object} menuItem
@@ -144,7 +145,7 @@ module.exports = class Generator {
         }
         let menu_name = menuItem.menu_name;
         let slug = this.generateSlug(menu_name);
-        this.setMenuToAdd({name: menu_name, slug})
+        this.setTermToAdd({name: menu_name, slug, type: 'nav_menu'})
 
         const menuItemExists = this.menuItemsToAdd.some((item) => item.title === menuItem.title);
         if (!menuItemExists) {
@@ -309,22 +310,22 @@ module.exports = class Generator {
 
     /**
      * Adds a post.
-     * @param {number} id - post Id, if not provided, random ID will be generated.
+     * @param {number|null} id - post Id, if not provided, random ID will be generated.
      * @param {string} url - post permalink url.
-     * @param {Date} date - post create time. Default current date and time.
+     * @param {Date|null} date - post create time. Defaults to current date and time.
      * @param {string} title - post title.
-     * @param {string} slug - post slug name if it exists. If not, one will be generated from title.
-     * @param {string} author - post author, it equals author's login name.
+     * @param {string|null} slug - post slug name if it exists. If not, one will be generated from title.
+     * @param {string|null} author - post author, it equals author's login name. Defaults to 'wordpress'.
      * @param {string} content - post content.
      * @param {string} summary - post summary, short description.
-     * @param {string} comment_status - post comment status, default is `open`, it can be `open` or `close`.
-     * @param {string} ping_status - post ping status, default is `open`, it can be `open` or `close`.
-     * @param {string} status - post status. Can be 'publish', 'future', 'draft', 'pending', 'private', 'trash', 'auto-draft' and 'inherit'.
-     * @param {string} type - post type. Default is 'post' for posts.
-     * @param {string} password - post visit password if it should, default is empty.
-     * @param {array} categories - post categories, it's an array item. Every item should has `slug` and `name` prototype.
-     * @param {array} tags - post tags, it's an array item. Every item should has `slug` and `name` prototype.
-     * @param {number} imageID - ID of preloaded image hosted on YOUR website. Will be used as a thumbnail.
+     * @param {string|null} comment_status - post comment status, default is 'open', it can be 'open' or 'close'.
+     * @param {string|null} ping_status - post ping status, default is 'open', it can be 'open' or 'close'.
+     * @param {string|null} status - post status. Can be 'publish', 'future', 'draft', 'pending', 'private', 'trash', 'auto-draft' and 'inherit'.
+     * @param {string|null} type - post type. Default is 'post' for posts.
+     * @param {string|null} password - post visit password if it should, default is empty.
+     * @param {array} categories - post categories, it's an array item. Every item should have 'slug' and 'name' prototype.
+     * @param {array} tags - post tags, it's an array item. Every item should have 'slug' and 'name' prototype.
+     * @param {number|null} imageID - ID of preloaded image hosted on YOUR website. Will be used as a thumbnail.
      * @return {Generator}
      */
     addPost({
@@ -333,7 +334,7 @@ module.exports = class Generator {
         date = new Date(),
         title,
         slug = this.generateSlug(title),
-        author,
+        author = 'wordpress',
         content,
         summary,
         comment_status = 'open',
@@ -413,19 +414,19 @@ module.exports = class Generator {
      *
      * Adds a product. WARNING: your WordPress website should have WooCommerce plugin activated.
      *
-     * @param {number} id - product Id, if not provided, random ID will be generated.
+     * @param {number|null} id - product Id, if not provided, random ID will be generated.
      * @param {string} url - product permalink url.
      * @param {string} title - product title.
-     * @param {string} slug - product slug. If none present, it will be generated from title.
-     * @param {Date} date - product publication date.
-     * @param {string} author - product author, it equals author's login name.
+     * @param {string|null} slug - product slug. If none present, it will be generated from title.
+     * @param {Date|null} date - product publication date. Defaults to current date.
+     * @param {string|null} author - product author, it equals author's login name. Defaults to 'wordpress'.
      * @param {string} content - product description.
      * @param {string} summary - product description summary.
-     * @param {string} comment_status - post comment status, default is `open`, it can be `open` or `close`.
-     * @param {string} ping_status - post ping status, default is `open`, it can be `open` or `close`.
-     * @param {string} type - product type. Options: 'simple', 'grouped', 'external' and 'variable'. Default is 'simple'.
-     * @param {string} status - product status (post status). Options: 'draft', 'pending', 'private' and 'publish'. Default is 'publish'.
-     * @param {string} password - password
+     * @param {string|null} comment_status - post comment status, default is `open`, it can be `open` or `close`.
+     * @param {string|null} ping_status - post ping status, default is `open`, it can be `open` or `close`.
+     * @param {string|null} type - product type. Options: 'simple', 'grouped', 'external' and 'variable'. Default is 'simple'.
+     * @param {string|null} status - product status (post status). Options: 'draft', 'pending', 'private' and 'publish'. Default is 'publish'.
+     * @param {string|null} password - password
      * @param {array|string} categories - array or string representing product categories.
      *  If an array, it should be like [{name: 'Top', slug: 'top'}, {name: 'Second'}].
      *  @see addProductCategory() for possible attributes. Only 'name' attribute is mandatory.
@@ -440,42 +441,42 @@ module.exports = class Generator {
      * @param {array} tags - array of product tags. Every element should have 'name' and 'slug' attributes.
      * @param {array} images - array of urls or objects representing product images.
      *  @see addAttachment for all possible attributes.
-     * @param {string} featured - Featured product. Default is false.
-     * @param {string} catalog_visibility - Catalog visibility. Options: 'visible', 'catalog', 'search' and 'hidden'. Default is 'visible'.
-     * @param {string} sku - product unique identifier, SKU
-     * @param {number} regular_price - product price.
-     * @param {number|''} sale_price - product price while it is on sale.
-     * @param {Date|''} sale_price_dates_from - date to start sale from.
-     * @param {Date|''} sale_price_dates_to - date to stop sale.
-     * @param {string} tax_status - product tax status. Defaults to 'taxable', more options: 'shipping' and 'none'.
+     * @param {string|null} featured - Featured product. Default is 'no'.
+     * @param {string|null} catalog_visibility - Catalog visibility. Options: 'visible', 'catalog', 'search' and 'hidden'. Default is 'visible'.
+     * @param {string|null} sku - product unique identifier, SKU. Defaults to empty string.
+     * @param {number|null} regular_price - product price. Defaults to 0.00.
+     * @param {number|null} sale_price - product price while it is on sale. Defaults to empty string.
+     * @param {Date|null} sale_price_dates_from - date to start sale from. Defaults to empty string.
+     * @param {Date|null} sale_price_dates_to - date to stop sale. Defaults to empty string.
+     * @param {string|null} tax_status - product tax status. Defaults to 'taxable', more options: 'shipping' and 'none'.
      * @param {string|null} tax_class - tax class.
-     * @param {string} reviews_allowed - Allow reviews. Default is 'true'.
-     * @param {string} manage_stock - Stock management at product level. Default is false.
-     * @param {string} backorders - If managing stock, this controls if backorders are allowed. Options: 'no', 'notify' and 'yes'. Default is 'no'.
-     * @param {string} sold_individually - Allow one item to be bought in a single order. Default is 'false'.
-     * @param {string} weight - product weight.
-     * @param {string} length - product length.
-     * @param {string} width - product width.
-     * @param {string} height - product height.
-     * @param {string} shipping_class - shipping class slug.
-     * @param {array} upsell_ids - array of ids of upsell products
-     * @param {array} crossell_ids - array of ids of crossell products
-     * @param {number} parent_id - Product parent ID.
-     * @param {string} purchase_note - Optional note to send the customer after purchase.
-     * @param {array} default_attributes - Array of default attributes.
-     * @param {array} grouped_products - Array of grouped products IDs.
-     * @param {number} menu_order - Menu order, used to custom sort products.
-     * @param {string} virtual - If the product is virtual. Default is 'no'.
-     * @param {string} downloadable - If the product is downloadable. Default is 'no'.
-     * @param {string} external_url - Product external URL. Only for external products.
-     * @param {string} button_text - Product external button text. Only for external products.
-     * @param {number} download_limit - Number of times downloadable files can be downloaded after purchase. Default is -1.
-     * @param {number} download_expiry - Number of days until access to downloadable files expires. Default is -1.
-     * @param {number} stock - stock quantity
-     * @param {string} stock_status - Controls the stock status of the product. Options: 'instock', 'outofstock', 'onbackorder'. Default is 'instock'.
-     * @param {array} downloadable_files - List of downloadable files.
-     * @param {number} price - price of product. Defaults to regular_price.
-     * @param {string} product_version - product generator version.
+     * @param {string|null} reviews_allowed - Allow reviews. Default is 'true'.
+     * @param {string|null} manage_stock - Stock management at product level. Default is false.
+     * @param {string|null} backorders - If managing stock, this controls if backorders are allowed. Options: 'no', 'notify' and 'yes'. Default is 'no'.
+     * @param {string|null} sold_individually - Allow one item to be bought in a single order. Default is 'false'.
+     * @param {string|null} weight - product weight.
+     * @param {string|null} length - product length.
+     * @param {string|null} width - product width.
+     * @param {string|null} height - product height.
+     * @param {string|null} shipping_class - shipping class slug.
+     * @param {array|null} upsell_ids - array of ids of upsell products
+     * @param {array|null} crossell_ids - array of ids of crossell products
+     * @param {number|null} parent_id - Product parent ID.
+     * @param {string|null} purchase_note - Optional note to send the customer after purchase.
+     * @param {array|null} default_attributes - Array of default attributes.
+     * @param {array|null} grouped_products - Array of grouped products IDs.
+     * @param {number|null} menu_order - Menu order, used to custom sort products.
+     * @param {string|null} virtual - If the product is virtual. Default is 'no'.
+     * @param {string|null} downloadable - If the product is downloadable. Default is 'no'.
+     * @param {string|null} external_url - Product external URL. Only for external products.
+     * @param {string|null} button_text - Product external button text. Only for external products.
+     * @param {number|null} download_limit - Number of times downloadable files can be downloaded after purchase. Default is -1.
+     * @param {number|null} download_expiry - Number of days until access to downloadable files expires. Default is -1.
+     * @param {number|null} stock - stock quantity
+     * @param {string|null} stock_status - Controls the stock status of the product. Options: 'instock', 'outofstock', 'onbackorder'. Default is 'instock'.
+     * @param {array|null} downloadable_files - List of downloadable files.
+     * @param {number|null} price - price of product. Defaults to regular_price.
+     * @param {string|null} product_version - product generator version.
      *  @see PRODUCT_VERSION for default value.
      * @return {Generator}
      */
@@ -485,7 +486,7 @@ module.exports = class Generator {
         title,
         slug = this.generateSlug(title),
         date = new Date(),
-        author,
+        author = 'wordpress',
         content,
         summary,
         comment_status = 'open',
@@ -502,9 +503,9 @@ module.exports = class Generator {
         catalog_visibility = 'visible',
         sku = '',
         regular_price = 0.00,
-        sale_price = '',
-        sale_price_dates_from = '',
-        sale_price_dates_to = '',
+        sale_price = null,
+        sale_price_dates_from = null,
+        sale_price_dates_to = null,
         tax_status = 'taxable',
         tax_class = null,
         reviews_allowed = 'yes',
@@ -738,12 +739,12 @@ module.exports = class Generator {
     /**
      * Adds user.
      *
-     * @param {number} id - user ID. If none present, random ID will be generated.
+     * @param {number|null} id - user ID. If none present, random ID will be generated.
      * @param {string} username - user login
      * @param {string} email - user email
      * @param {string} display_name - user nickname
-     * @param {string} first_name - user first name
-     * @param {string} last_name - user last name
+     * @param {string|null} first_name - user first name. Defaults to empty string.
+     * @param {string|null} last_name - user last name. Defaults to empty string.
      * @return {Generator}
      */
     addUser({
@@ -768,10 +769,10 @@ module.exports = class Generator {
     /**
      * Adds tag.
      *
-     * @param {number} id - tag Id, if not provided, random ID will be generated.
-     * @param {string} slug - tag slug. Used in URLS, e.g. "js-rocks". If not provided, it will be generated from name.
+     * @param {number|null} id - tag Id, if not provided, random ID will be generated.
+     * @param {string|null} slug - tag slug. Used in URLS, e.g. "js-rocks". If not provided, it will be generated from name.
      * @param {string} name - tag title, e.g. "JS"
-     * @param {string} description - tag description string, default is empty.
+     * @param {string|null} description - tag description string, defaults to empty string.
      * @return {Generator}
      */
     addTag({id = this.rId(), name, slug = this.generateSlug(name), description = ''}) {
@@ -787,11 +788,11 @@ module.exports = class Generator {
     /**
      * Adds category.
      *
-     * @param {number} id - category Id. If not provided, random ID will be generated.
-     * @param {string} name - category slug. Used in URLS, e.g. "js-rocks"
-     * @param {string} slug - category title, e.g. "Everything about JS"
-     * @param {number} parent_id - category parent id if it existed.
-     * @param {string} description - category description string, default is empty.
+     * @param {number|null} id - category Id. If not provided, random ID will be generated.
+     * @param {string} name - category title, e.g. "Everything about JS"
+     * @param {string|null} slug - category slug. Used in URLS, e.g. "js-rocks". If not provided, it will be generated from name.
+     * @param {number|null} parent_id - category parent id if it exists.
+     * @param {string|null} description - category description string, default is empty.
      * @return {Generator}
      */
     addCategory({
@@ -817,10 +818,10 @@ module.exports = class Generator {
     /**
      * Adds product category term.
      *
-     * @param {number} id - category Id. If not provided, random ID will be generated.
+     * @param {number|null} id - category Id. If not provided, random ID will be generated.
      * @param {string} name - category title, e.g. "Everything about JS"
-     * @param {string} slug - category slug. Used in URLS, e.g. "js-rocks". If none present it will be generated from name.
-     * @param {number} parent_id - category parent id if it existed.
+     * @param {string|null} slug - category slug. Used in URLS, e.g. "js-rocks". If none present it will be generated from name.
+     * @param {number|null} parent_id - category parent id if it existed.
      * @return {Generator}
      */
     addProductCategory({
@@ -847,12 +848,12 @@ module.exports = class Generator {
     /**
      * Adds product attribute term.
      *
-     * @param {number} id - attribute ID. If none present, random ID will be generated.
+     * @param {number|null} id - attribute ID. If none present, random ID will be generated.
      * @param {string} name - attribute name, e.g. 'Weight'.
      * @param {string} value - attribute value, e.g. '10 Kg'.
-     * @param {string} slug - attribute slug, if none present, it will be generated from value.
-     * @param {string} taxonomy - attribute taxonomy, if none present, it will be generated from name. E.G. 'pa_weight'
-     * @param {number} parent_id - parent attribute id.
+     * @param {string|null} slug - attribute slug, if none present, it will be generated from value.
+     * @param {string|null} taxonomy - attribute taxonomy, if none present, it will be generated from name. E.G. 'pa_weight'
+     * @param {number|null} parent_id - parent attribute id.
      * @return {Generator}
      */
     addProductAttribute({
@@ -883,18 +884,18 @@ module.exports = class Generator {
     /**
      * Adds media file to post.
      *
-     * @param {number} id - attachment Id. If not provided, random ID will be generated.
+     * @param {number|null} id - attachment Id. If not provided, random ID will be generated.
      * @param {string} url - attachment absolute url.
-     * @param {Date} date - attachment create time.
-     * @param {string} file - attachment relative path if it exist.
+     * @param {Date|null} date - attachment create time. Defaults to current date.
+     * @param {string|null} file - attachment relative path if it exist.
      * @param {string} title - attachment title.
-     * @param {string} author - attachment uploader.
-     * @param {string} description - attachment description.
+     * @param {string|null} author - attachment uploader. Defaults to 'wordpress'.
+     * @param {string|null} description - attachment description. Defaults to empty string.
      * @param {number} post_id - post id relate to the attachment.
-     * @param {string} comment_status - attachment comment status, default is `open`, it can be `open` or `closed`.
-     * @param {string} ping_status - post ping status, default is `open`, it can be `open` or `closed`.
-     * @param {string} meta_data - other serialized attach meta data.
-     * @param {string} attachment_type - type of an attachment.
+     * @param {string|null} comment_status - attachment comment status, default is `open`, it can be `open` or `closed`.
+     * @param {string|null} ping_status - post ping status, default is `open`, it can be `open` or `closed`.
+     * @param {string|null} meta_data - other serialized attach meta data.
+     * @param {string|null} attachment_type - type of an attachment. Defaults to 'product_image'.
      * @return {Generator}
      */
     addAttachment({
@@ -903,7 +904,7 @@ module.exports = class Generator {
         date = new Date(),
         file,
         title,
-        author = 'admin',
+        author = 'wordpress',
         description = '',
         post_id,
         comment_status = 'open',
@@ -962,8 +963,8 @@ module.exports = class Generator {
     /**
      * Adds menu term.
      *
-     * @param {number} id - menu ID. If not present, random ID will be generated.
-     * @param {string} slug - menu slug. If not present, it will be generated from name.
+     * @param {number|null} id - menu ID. If not present, random ID will be generated.
+     * @param {string|null} slug - menu slug. If not present, it will be generated from name.
      * @param {string} name - menu name.
      * @return {Generator}
      */
@@ -984,25 +985,25 @@ module.exports = class Generator {
      *
      * @param id - menu item ID. If not present, random ID will be generated.
      * @param {string} title - menu item title.
-     * @param {string} url - menu item url.
-     * @param {Date} date - date of menu item publication.
-     * @param {string} author - username of menu author.
+     * @param {string} url - menu item url. Defaults to empty string.
+     * @param {Date|null} date - date of menu item publication. If none present, current date is used.
+     * @param {string|null} author - username of menu author. Defaults to 'wordpress'.
      * @param {string} guid
-     * @param {string} content - menu item content.
-     * @param {string} excerpt - menu item summary.
-     * @param {string} status - menu item status (post status). Options: 'draft', 'pending', 'private' and 'publish'. Default is 'publish'.
-     * @param {number} parent - ID of parent menu item.
-     * @param {number} menu_order - position in menu. Defaults to 0.
-     * @param {string} password - menu item password
+     * @param {string|null} content - menu item content. Defaults to empty string.
+     * @param {string|null} excerpt - menu item summary. Defaults to empty string.
+     * @param {string|null} status - menu item status (post status). Options: 'draft', 'pending', 'private' and 'publish'. Default is 'publish'.
+     * @param {number|null} parent - ID of parent menu item. Defaults to 0.
+     * @param {number|null} menu_order - position in menu. Defaults to 0.
+     * @param {string|null} password - menu item password
      * @param {string} menu_name - name of menu to which this item will be added.
      * @param {number} menu_item_object_id - ID of the category this item will be referencing.
      * @param {string} menu_item_object - type of menu_item_object_id, usually 'product_cat'.
-     * @param {string} menu_item_type - type of menu item
-     * @param {number} menu_item_menu_item_parent - parent of menu item
-     * @param {string} menu_item_target - target of menu item
-     * @param {array} menu_item_classes - classes of menu item
-     * @param {string} menu_item_xfn
-     * @param {string} menu_item_url
+     * @param {string|null} menu_item_type - type of menu item. Defaults to 'taxonomy'.
+     * @param {number|null} menu_item_menu_item_parent - parent of menu item. Defaults to 0.
+     * @param {string|null} menu_item_target - target of menu item. Defaults to empty string.
+     * @param {array|null} menu_item_classes - classes of menu item. Defaults to empty array.
+     * @param {string|null} menu_item_xfn - defaults to empty string
+     * @param {string|null} menu_item_url - defaults to empty string
      * @return {Generator}
      */
     addMenuItem({
@@ -1010,7 +1011,7 @@ module.exports = class Generator {
         title = this.generateSlug(id),
         url = '',
         date = new Date(),
-        author,
+        author= 'wordpress',
         guid,
         content = '',
         excerpt = '',
@@ -1175,9 +1176,9 @@ module.exports = class Generator {
     /**
      * Returns generated WMR(XML).
      *
-     * @param {boolean} options.pretty - whether to pretty print the output or not
-     * @param {string} options.indent - standard indentation
-     * @param {string} options.newline - new line character
+     * @param {boolean} options.pretty - whether to pretty print the output or not. Defaults to false.
+     * @param {string} options.indent - standard indentation. Defaults to four spaces.
+     * @param {string} options.newline - new line character. Defaults to '\n'.
      * @return string
      */
     stringify(options= {}) {
@@ -1192,9 +1193,9 @@ module.exports = class Generator {
     /**
      * Returns well formed WXR
      *
-     * @param {boolean} options.pretty - whether to pretty print the output or not
-     * @param {string} options.indent - standard indentation
-     * @param {string} options.newline - new line character
+     * @param {boolean} options.pretty - whether to pretty print the output or not. Defaults to false.
+     * @param {string} options.indent - standard indentation. Defaults to four spaces.
+     * @param {string} options.newline - new line character. Defaults to '\n'.
      * @return {string}
      */
     generateWXR(options= {}) {

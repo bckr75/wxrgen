@@ -1,8 +1,8 @@
 {
   "name": "wxrgen",
   "title": "WXR Generator",
-  "version": "1.0.9",
-  "description": "WXR(XML) file generator for importing data to wordpress",
+  "version": "1.1.0",
+  "description": "WordPress WXR(XML) file generator for importing posts, pages, categories, tags, menus, menu items, users, WooCommerce products, product categories and product attributes, media files for products and posts",
   "main": "./src",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
