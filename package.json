@@ -1,7 +1,7 @@
 {
   "name": "wxrgen",
   "title": "WXR Generator",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "WordPress WXR(XML) file generator for importing posts, pages, categories, tags, menus, menu items, users, WooCommerce products, product categories and product attributes, media files for products and posts",
   "main": "./src",
   "scripts": {

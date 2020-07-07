@@ -1,5 +1,5 @@
-# WXRGen
-#### WordPress WXR(XML) file generator for importing data to wordpress website.
+# WXRGen - WXR Generator
+#### WordPress WXR (XML) file generator for importing data to wordpress website.
 Inspired by [firekylin's WXR generator](https://github.com/firekylin/wxr-generator).
 
 This tool helps you to create well-formed WXR instead of messy one with tags and attachments on the same place.
