@@ -2,7 +2,12 @@ const xmlbuilder = require('xmlbuilder');
 
 const PRODUCT_VERSION = '3.9.2';
 
-//TODO: tags, users, etc
+/**
+ * WXR generator.
+ * Allows you to form Wordpress WXR document for importing posts, pages, categories, tags, menus, menu items, users
+ * WooCommerce products, product categories and product attributes, media files for products and posts
+ * @type {Generator}
+ */
 module.exports = class Generator {
     /** @type {array} */
     generatedIds = [];
@@ -11,6 +16,8 @@ module.exports = class Generator {
     /** @type {array} */
     addedMenus = [];
     /** @type {object} */
+    addedTags = {};
+    /** @type {object} */
     addedProductCategories = {};
     /** @type {object} */
     addedProductAttributes = {};
@@ -18,9 +25,9 @@ module.exports = class Generator {
     termsToAdd = [];
     postsToAdd = [];
     productsToAdd = [];
-    menusToAdd = [];
     menuItemsToAdd = [];
     attachmentsToAdd = [];
+    usersToAdd = [];
 
     /**
      * Generates pseudo random ID.
@@ -75,6 +82,10 @@ module.exports = class Generator {
 
     /**
      * Sets term to add to the beginning of document
+     * @see addCategory
+     * @see addProductCategory
+     * @see addProductAttribute
+     * @see addTag
      * @param {object} term
      * @return Generator
      */
@@ -95,6 +106,9 @@ module.exports = class Generator {
                 if (term.type === 'nav_menu' && this.addedMenus.hasOwnProperty(term.name)) {
                     return true;
                 }
+                if (term.type === 'tag' && this.addedTags.hasOwnProperty(term.name)) {
+                    return true;
+                }
                 return item.name === term.name;
             }
         });
@@ -107,18 +121,20 @@ module.exports = class Generator {
     }
 
     /**
-     * Sets menu to add to the  document
+     * Sets menu to add to the document
+     * @see addMenu
      * @param {object} menu
      * @return Generator
      */
     setMenuToAdd(menu) {
-        menu.type='nav_menu';
+        menu.type = 'nav_menu';
 
         return this.setTermToAdd(menu);
     }
 
     /**
      * Sets menu item to add to the document
+     * @see addMenuItem
      * @param {object} menuItem
      * @return Generator
      */
@@ -140,10 +156,17 @@ module.exports = class Generator {
 
     /**
      * Sets post to add to the  document
+     * @see addPost
      * @param {object} post
      * @return Generator
      */
     setPostToAdd(post) {
+        if (Array.isArray(post.tags)) {
+            post.tags.forEach(tag => {
+                tag.type = 'tag';
+                this.setTermToAdd(tag);
+            });
+        }
         if (Array.isArray(post.categories)) {
             post.categories.forEach(cate => {
                 cate.type = 'category';
@@ -161,6 +184,24 @@ module.exports = class Generator {
         return this;
     }
 
+    /**
+     * Sets page to add to the document.
+     * @see addPage
+     * @param {object} page
+     * @return {Generator}
+     */
+    setPageToAdd(page) {
+        page.type = 'page';
+
+        return this.setPostToAdd(page);
+    }
+
+    /**
+     * Sets product to ad to the document.
+     * @see addProduct
+     * @param {object} product
+     * @return {Generator}
+     */
     setProductToAdd(product) {
         let images = product.images;
         if (Array.isArray(images)) {
@@ -182,6 +223,16 @@ module.exports = class Generator {
             }
 
             product.images = images;
+        }
+        let tags = product.tags;
+        if (Array.isArray(tags)) {
+            tags.forEach(tag => {
+                if (typeof tag === 'string') {
+                    tag = {name: tag};
+                }
+                tag.type = 'tag';
+                this.setTermToAdd(tag);
+            });
         }
 
         let categories = product.categories;
@@ -224,6 +275,7 @@ module.exports = class Generator {
 
     /**
      * Sets attachment to add to the end of document
+     * @see addAttachment
      * @param {object} attachment
      * @return Generator
      */
@@ -235,6 +287,21 @@ module.exports = class Generator {
         const attachmentExists = this.attachmentsToAdd.some((item) => item.title === attachment.title)
         if (!attachmentExists) {
             this.attachmentsToAdd.push(attachment);
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets user to add to the beginning of document.
+     * @see addUser
+     * @param {object} user
+     * @return {Generator}
+     */
+    setUserToAdd(user) {
+        const userExists = this.usersToAdd.some((item) => item.name === user.name)
+        if (!userExists) {
+            this.usersToAdd.push(user);
         }
 
         return this;
@@ -278,6 +345,15 @@ module.exports = class Generator {
         tags,
         imageID
     }) {
+        if (Array.isArray(tags)) {
+            tags.forEach(tag => {
+                const name = tag.name;
+                const tagIsInQueue = this.termsToAdd.some((item) => item.name === name);
+                if (!tagIsInQueue) {
+                    this.addTag(tag);
+                }
+            });
+        }
         if (Array.isArray(categories)) {
             categories.forEach(cate => {
                 const name = cate.name;
@@ -383,7 +459,7 @@ module.exports = class Generator {
      * @param {string} height - product height.
      * @param {string} shipping_class - shipping class slug.
      * @param {array} upsell_ids - array of ids of upsell products
-     * @param {array} crossell_ids - array of ids of crosssell products
+     * @param {array} crossell_ids - array of ids of crossell products
      * @param {number} parent_id - Product parent ID.
      * @param {string} purchase_note - Optional note to send the customer after purchase.
      * @param {array} default_attributes - Array of default attributes.
@@ -398,6 +474,7 @@ module.exports = class Generator {
      * @param {number} stock - stock quantity
      * @param {string} stock_status - Controls the stock status of the product. Options: 'instock', 'outofstock', 'onbackorder'. Default is 'instock'.
      * @param {array} downloadable_files - List of downloadable files.
+     * @param {number} price - price of product. Defaults to regular_price.
      * @param {string} product_version - product generator version.
      *  @see PRODUCT_VERSION for default value.
      * @return {Generator}
@@ -473,6 +550,17 @@ module.exports = class Generator {
                     return {id, title, url};
                 });
             }
+        }
+        if (Array.isArray(tags)) {
+            tags.forEach(tag => {
+                if (typeof tag === 'string') {
+                    tag = {name: tag};
+                }
+                const tagExists = this.termsToAdd.some((item) => item.name === tag.name);
+                if (!tagExists) {
+                    this.addTag(tag);
+                }
+            });
         }
         if (Array.isArray(categories)) {
             categories.forEach(cate => {
@@ -680,15 +768,15 @@ module.exports = class Generator {
     /**
      * Adds tag.
      *
-     * @param {number} id - tag Id, if not provied, random ID will be generated.
-     * @param {string} slug - tag slug. Used in URLS, e.g. "js-rocks"
+     * @param {number} id - tag Id, if not provided, random ID will be generated.
+     * @param {string} slug - tag slug. Used in URLS, e.g. "js-rocks". If not provided, it will be generated from name.
      * @param {string} name - tag title, e.g. "JS"
      * @param {string} description - tag description string, default is empty.
      * @return {Generator}
      */
-    addTag({id = this.rId(), slug, name, description = ''}) {
+    addTag({id = this.rId(), name, slug = this.generateSlug(name), description = ''}) {
         let tag = this.channel.ele('wp:tag');
-        tag.ele('wp:term_id', {}, id || Math.floor(Math.random() * 100000));
+        tag.ele('wp:term_id', {}, id);
         tag.ele('wp:tag_slug', {}, slug);
         tag.ele('wp:tag_name', {}, name);
         tag.ele('wp:tag_description', {}, description);
@@ -1114,6 +1202,12 @@ module.exports = class Generator {
         let pCatsToAdd = [];
         let pAttrsToAdd = [];
         let menusToAdd = [];
+        let tagsToAdd = [];
+        if (Array.isArray(this.usersToAdd)) {
+            for (const user of this.usersToAdd) {
+                this.addUser(user);
+            }
+        }
         if (Array.isArray(this.termsToAdd)) {
             for (const term of this.termsToAdd) {
                 if (term.type === 'category') {
@@ -1124,7 +1218,14 @@ module.exports = class Generator {
                     pAttrsToAdd.push(term);
                 } else if (term.type === 'nav_menu') {
                     menusToAdd.push(term);
+                } else if (term.type === 'tag') {
+                    tagsToAdd.push(term);
                 }
+            }
+        }
+        if (Array.isArray(tagsToAdd)) {
+            for (const tag of tagsToAdd) {
+                this.addTag(tag);
             }
         }
         if (Array.isArray(catsToAdd)) {
