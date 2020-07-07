@@ -1,5 +1,5 @@
 # WXRGen
-####WordPress WXR(XML) file generator for importing data to wordpress website.
+#### WordPress WXR(XML) file generator for importing data to wordpress website.
 Inspired by [firekylin's WXR generator](https://github.com/firekylin/wxr-generator).
 
 This tool helps you to create well-formed WXR instead of messy one with tags and attachments on the same place.
@@ -8,11 +8,11 @@ WooCommerce products, product categories and product attributes, media files for
 
 See JSDoc for parameters and stuff.
 
-##Installation
+## Installation
 ```shell script
 npm i wxrgen --save
 ```
-##Usage
+## Usage
 ```js
 const WXRGen = require('wxrgen');
 const fs = require('fs');
@@ -56,8 +56,8 @@ fs.writeFileSync('./result.xml', generator.generateWXR());
 
 ```
 
-##API
-####new WXRGen(object)
+## API
+#### new WXRGen(object)
 Initializes generator with next parameters:
 * `name` {string} - site title
 * `url` {string} - site url
@@ -65,7 +65,7 @@ Initializes generator with next parameters:
 * `language` {string|null} - site language, default is 'en-US'
 * `base_site_url` {string|null} - same as url
 * `base_blog_url` {string|null} - same as url
-#####Example
+##### Example
 ```js
     const WXRGen = require('wxrgen');
     const generator = new WXRGen({
@@ -76,9 +76,9 @@ Initializes generator with next parameters:
     });
 ```
 
-##Safe methods that will generate you the correct WXR
+## Safe methods that will generate you the correct WXR
 
-####setTermToAdd(object)
+#### setTermToAdd(object)
 This method used mostly in other methods, 
 you don't usually have to explicitly call it.
 
@@ -94,7 +94,7 @@ The parameters are:
 * `taxonomy` {string|null} - term taxonomy, used in attributes, if none present, it will be generated from term title, e.g. 'pa_weight'
 * `type` {string} - __mandatory!__ term type, can be 'category', 'product_cat', 'product_attribute', 'nav_menu' and 'tag'
 
-#####Example
+##### Example
 ```js
 generator.setTermToAdd({
     name: 'Super Category',
@@ -107,7 +107,7 @@ generator.setTermToAdd({
 });
 ```
 
-####setMenuItemToAdd(object)
+#### setMenuItemToAdd(object)
 __Sets menu item to add to the beginning of document.__
 
 The parameters are:
@@ -132,7 +132,7 @@ The parameters are:
 * `menu_item_classes` {array|null} - classes of menu item. Defaults to empty array.
 * `menu_item_xfn` {string|null} - defaults to empty string
 * `menu_item_url` {string|null} - defaults to empty string
-#####Example
+##### Example
 ```js
 const id = generator.rId();
 
@@ -151,7 +151,7 @@ generator.setMenuItemToAdd({
 });
 ```
 
-####setPostToAdd(object)
+#### setPostToAdd(object)
 __Sets post to add to the document. All of its categories and tags will be added automatically.__
 
 The parameters are:
@@ -171,7 +171,7 @@ The parameters are:
 * `categories` {array} - post categories, it's an array item. Every item should has 'slug' and 'name' prototype.
 * `tags` {array} - post tags, it's an array item. Every item should has 'slug' and 'name' prototype.
 * `imageID` {number|null} - ID of preloaded image hosted on YOUR website. Will be used as a thumbnail.
-#####Example
+##### Example
 ```js
 generator.setPostToAdd({
     url: 'http://localhost/post-1/',
@@ -183,7 +183,7 @@ generator.setPostToAdd({
 });
 ```
 
-####setPageToAdd(object)
+#### setPageToAdd(object)
 __Sets page to add to the document. Parameters are the same as of post. All of its categories and tags will be added automatically.__
 
 The parameters are:
@@ -203,7 +203,7 @@ The parameters are:
 * `categories` {array} - page categories, it's an array item. Every item should have 'slug' and 'name' prototype.
 * `tags` {array} - page tags, it's an array item. Every item should have 'slug' and 'name' prototype.
 * `imageID` {number|null} - ID of preloaded image hosted on YOUR website. Will be used as a thumbnail.
-#####Example
+##### Example
 ```js
 generator.setPageToAdd({
     url: 'http://localhost/terms-and-conditions-page/',
@@ -215,7 +215,7 @@ generator.setPageToAdd({
 });
 ```
 
-####setProductToAdd(object)
+#### setProductToAdd(object)
 __Sets product to add to the document. 
 All it's categories, attributes, tags and images will be added automatically.__
 
@@ -284,7 +284,7 @@ The parameters are:
 * `downloadable_files` {array|null} - List of downloadable files.
 * `price` {number|null} - price of product. Defaults to regular_price.
 * `product_version` {string|null} - product generator version. Defaults to 3.9.2.
-#####Example
+##### Example
 ```js
 generator.setProductToAdd({
     url: '',
@@ -311,7 +311,7 @@ generator.setProductToAdd({
 });
 ```
 
-####setAttachmentToAdd(object)
+#### setAttachmentToAdd(object)
 __Sets attachment to add to the end of a document. This is used for importing media to posts, pages or products. 
 You don't usually have to explicitly call this.__
 
@@ -329,7 +329,7 @@ The parameters are:
 * `ping_status` {string|null}  - post ping status, default is 'open', it can be 'open' or 'closed'.
 * `meta_data` {string|null}  - other serialized attach meta data.
 * `attachment_type` {string|null}  - type of an attachment. Defaults to 'product_image'.
-#####Example
+##### Example
 ```js
 generator.setAttachmentToAdd({
     url: 'https://i.imgur.com/B21m40g.png',
@@ -338,7 +338,7 @@ generator.setAttachmentToAdd({
 });
 ```
 
-####setUserToAdd(object)
+#### setUserToAdd(object)
 __Sets user to add to the beginning of a document.__
 
 The parameters are:
@@ -349,7 +349,7 @@ The parameters are:
 * `display_name` {string}  - user nickname
 * `first_name` {string|null}  - user first name. Defaults to empty string.
 * `last_name` {string|null}  - user last name. Defaults to empty string.
-#####Example
+##### Example
 ```js
 generator.setUserToAdd({
     username: 'admin',
@@ -358,7 +358,7 @@ generator.setUserToAdd({
 });
 ```
 
-##Forming the document
+## Forming the document
 
 After you have called all of your methods that set something to add, you should use
 ```js
@@ -370,7 +370,7 @@ With or without following options:
 * `indent` {string}  - standard indentation. Defaults to four spaces.
 * `newline` {string}  - new line character. Defaults to '\n'.
 
-#####Example:
+##### Example:
 ```js
 fs.writeFileSync('./minified.xml', generator.generateWXR());
 fs.writeFileSync('./pretty.xml', generator.generateWXR({ pretty: true }));
@@ -378,28 +378,28 @@ fs.writeFileSync('./pretty.xml', generator.generateWXR({ pretty: true }));
 
 __Note that calling ```generator.stringify()``` will have no effect as your XML is empty at this point and everything is forming here.__
 
-##Helper functions
-####generator.generateSlug(name)
+## Helper functions
+#### generator.generateSlug(name)
 All non-alphanumeric characters are replaced with '-'.
 The parameters are:
 * `name` {string|number} - name to generate slug of.
 
-####generator.generateTaxonomy(name)
+#### generator.generateTaxonomy(name)
 All non-alphanumeric characters are replaced with underscores.
 The parameters are:
 * `name` {string|number} - name to generate taxonomy of.
 
-####generator.generateCDataArray(arr)
+#### generator.generateCDataArray(arr)
 Converts JS array to CData array notation.
 The parameters are:
 * `arr` {array} - array to generate CData array notation of.
 
-####generator.generateAttributesCData(arr)
+#### generator.generateAttributesCData(arr)
 Generates CData encoded array notation string for attributes.
 The parameters are:
 * `attributes` {array} - array to generate CData array notation of.
 
-####generator.getShortTypeOf(variable)
+#### generator.getShortTypeOf(variable)
 Gets type of variable for CDATA.
 The parameters are:
 * `variable` - variable to get type of.
@@ -409,9 +409,9 @@ The parameters are:
 This is the end of safe methods. Next methods will provide same functionality as above
 __although I do not recommend you to use them! Your WXR will be a mess unless you write a ton of useless code. You will have to manually keep the order of adding!__
 
-##Unsafe methods
+## Unsafe methods
 
-####addPost(object)
+#### addPost(object)
 __Adds post to current position of document. All of its categories and tags terms will be added above.__
 
 The parameters are:
@@ -431,7 +431,7 @@ The parameters are:
 * `categories` {array} - post categories, it's an array item. Every item should has 'slug' and 'name' prototype.
 * `tags` {array} - post tags, it's an array item. Every item should has 'slug' and 'name' prototype.
 * `imageID` {number|null} - ID of preloaded image hosted on YOUR website. Will be used as a thumbnail.
-#####Example
+##### Example
 ```js
 generator.addPost({
     url: 'http://localhost/post-1/',
@@ -445,7 +445,7 @@ generator.addPost({
 });
 ```
 
-####addProduct(object)
+#### addProduct(object)
 __Adds product to the current position of document.
 All of its categories, attributes and tags will be added above, images will be added beyond.__
 
@@ -514,7 +514,7 @@ The parameters are:
 * `downloadable_files` {array|null} - List of downloadable files.
 * `price` {number|null} - price of product. Defaults to regular_price.
 * `product_version` {string|null} - product generator version. Defaults to 3.9.2.
-#####Example
+##### Example
 ```js
 generator.addProduct({
     url: '',
@@ -541,7 +541,7 @@ generator.addProduct({
 });
 ```
 
-####addPage(object)
+#### addPage(object)
 __Adds product to the current position of document. Parameters are the same as of post. 
 All of its categories and tags terms will be added above.__
 
@@ -562,7 +562,7 @@ The parameters are:
 * `categories` {array} - page categories, it's an array item. Every item should have 'slug' and 'name' prototype.
 * `tags` {array} - page tags, it's an array item. Every item should have 'slug' and 'name' prototype.
 * `imageID` {number|null} - ID of preloaded image hosted on YOUR website. Will be used as a thumbnail.
-#####Example
+##### Example
 ```js
 generator.addPage({
     url: 'http://localhost/terms-and-conditions-page/',
@@ -574,7 +574,7 @@ generator.addPage({
 });
 ```
 
-####addUser(object)
+#### addUser(object)
 __Adds user to the current position of document.__
 
 The parameters are:
@@ -585,7 +585,7 @@ The parameters are:
 * `display_name` {string}  - user nickname
 * `first_name` {string|null}  - user first name. Defaults to empty string.
 * `last_name` {string|null}  - user last name. Defaults to empty string.
-#####Example
+##### Example
 ```js
 generator.addUser({
     username: 'admin',
@@ -594,7 +594,7 @@ generator.addUser({
 });
 ```
 
-####addTag(object)
+#### addTag(object)
 __Adds tag term to the current position of document.__
 
 The parameters are:
@@ -603,14 +603,14 @@ The parameters are:
 * `slug` {string|null}  - tag slug. Used in URLS, e.g. "js-rocks". If not provided, it will be generated from name.
 * `name` {string}  - tag title, e.g. "JS"
 * `description` {string|null}  - tag description string, defaults to empty string.
-#####Example
+##### Example
 ```js
 generator.addTag({
    name: 'Post'
 });
 ```
 
-####addCategory(object)
+#### addCategory(object)
 __Adds category term to the current position of document.__
 
 The parameters are:
@@ -621,14 +621,14 @@ The parameters are:
 * `parent_id` {number|null}  - category parent id if it exists.
 * `description` {string|null}  - category description string, default is empty.
 
-#####Example
+##### Example
 ```js
 generator.addCategory({
    name: 'Post'
 });
 ```
 
-####addProductCategory(object)
+#### addProductCategory(object)
 __Adds product category term to the current position of document.__
 
 __*You have to install and activate WooCommerce plugin before importing!*__
@@ -640,14 +640,14 @@ The parameters are:
 * `slug` {string|null}  - category slug. Used in URLS, e.g. "js-rocks". If none present it will be generated from name.
 * `parent_id` {number|null}  - category parent id if it existed.
 
-#####Example
+##### Example
 ```js
 generator.addProductCategory({
    name: 'Makeup'
 });
 ```
 
-####addProductAttribute(object)
+#### addProductAttribute(object)
 __Adds product attribute term to the current position of document.__
 
 __*You have to install and activate WooCommerce plugin before importing!*__
@@ -661,7 +661,7 @@ The parameters are:
 * `taxonomy` {string|null}  - attribute taxonomy, if none present, it will be generated from name. E.G. 'pa_weight'
 * `parent_id` {number|null}  - parent attribute id.
 
-#####Example
+##### Example
 ```js
 generator.addProductAttribute({
     name: 'Height',
@@ -669,7 +669,7 @@ generator.addProductAttribute({
 });
 ```
 
-####addAttachment(object)
+#### addAttachment(object)
 __Adds attachment to the current position of document. This is used for importing media to posts, pages or products.__
 
 The parameters are:
@@ -686,7 +686,7 @@ The parameters are:
 * `ping_status` {string|null}  - post ping status, default is 'open', it can be 'open' or 'closed'.
 * `meta_data` {string|null}  - other serialized attach meta data.
 * `attachment_type` {string|null}  - type of an attachment. Defaults to 'product_image'.
-#####Example
+##### Example
 ```js
 generator.addAttachment({
     url: 'https://i.imgur.com/B21m40g.png',
@@ -695,7 +695,7 @@ generator.addAttachment({
 });
 ```
 
-####addMenu(object)
+#### addMenu(object)
 __Adds product attribute term to the current position of document.__
 This is also called when you call addMenuItem, in case of menu doesn't exist.
 
@@ -705,14 +705,14 @@ The parameters are:
 * `slug` {string|null}  - menu slug. If not present, it will be generated from name.
 * `name` {string}  - menu name.
 
-#####Example
+##### Example
 ```js
 generator.addMenu({
     name: 'MainMenu'
 });
 ```
 
-####addMenuItem(object)
+#### addMenuItem(object)
 __Adds menu item to the current position of document.__
 
 __*You have to know the ID of something you are trying to add as menu item!*__
@@ -739,7 +739,7 @@ The parameters are:
 * `menu_item_classes` {array|null} - classes of menu item. Defaults to empty array.
 * `menu_item_xfn` {string|null} - defaults to empty string
 * `menu_item_url` {string|null} - defaults to empty string
-#####Example
+##### Example
 ```js
 //You have to know it's ID!!!
 const categoryId = 999;
@@ -756,7 +756,7 @@ generator.addMenuItem({
 });
 ```
 
-##Forming the document
+## Forming the document
 
 After you have called all of your methods that set something to add, you should use
 ```js
@@ -768,7 +768,7 @@ With or without following options:
 * `indent` {string}  - standard indentation. Defaults to four spaces.
 * `newline` {string}  - new line character. Defaults to '\n'.
 
-#####Example:
+##### Example:
 ```js
 fs.writeFileSync('./minified.xml', generator.stringify());
 fs.writeFileSync('./pretty.xml', generator.stringify({ pretty: true }));
