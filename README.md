@@ -90,6 +90,7 @@ The parameters are:
 * `slug` {string|null} - term slug. If not provided, it will be generated from term title or value if it's an attribute.
 * `parent_id` {number|null} - term parent id if it exists.
 * `description` {string|null} - description, usually empty string
+* `image` {number|string|null} - ID or URL of image to set as category thumbnail. Used in categories. Default is null.
 * `value` {string|null} - term value, used in attributes, e.g. '10 Kg'.
 * `taxonomy` {string|null} - term taxonomy, used in attributes, if none present, it will be generated from term title, e.g. 'pa_weight'
 * `type` {string} - __mandatory!__ term type, can be 'category', 'product_cat', 'product_attribute', 'nav_menu' and 'tag'
@@ -321,10 +322,10 @@ The parameters are:
 * `url` {string}  - attachment absolute url.
 * `date` {Date|null}  - attachment create time. Defaults to current date.
 * `file` {string|null}  - attachment relative path if it exist.
-* `title` {string}  - attachment title.
+* `title` {string|null}  - attachment title. If none present, it will be generated from source url.
 * `author` {string|null}  - attachment uploader. Defaults to 'wordpress'.
 * `description` {string|null}  - attachment description. Defaults to empty string.
-* `post_id` {number}  - post id relate to the attachment.
+* `post_id` {number|null}  - post id relate to the attachment. Defaults to 0.
 * `comment_status` {string|null}  - attachment comment status, default is 'open', it can be 'open' or 'closed'.
 * `ping_status` {string|null}  - post ping status, default is 'open', it can be 'open' or 'closed'.
 * `meta_data` {string|null}  - other serialized attach meta data.
@@ -333,8 +334,7 @@ The parameters are:
 ```js
 generator.setAttachmentToAdd({
     url: 'https://i.imgur.com/B21m40g.png',
-    title: 'Image',
-    post_id: 0
+    title: 'Image'
 });
 ```
 
@@ -403,6 +403,11 @@ The parameters are:
 Gets type of variable for CDATA.
 The parameters are:
 * `variable` - variable to get type of.
+
+#### generator.getFileNameFromURL(url)
+Gets filename from URL.
+The parameters are:
+* `url` {string} - URL to get filename of.
 
 ##
 
@@ -639,6 +644,7 @@ The parameters are:
 * `name` {string}  - category title, e.g. "Everything about JS"
 * `slug` {string|null}  - category slug. Used in URLS, e.g. "js-rocks". If none present it will be generated from name.
 * `parent_id` {number|null}  - category parent id if it existed.
+* `image` {number|string|null} - ID or URL of image to set as category thumbnail. Default is null.
 
 ##### Example
 ```js
@@ -678,10 +684,10 @@ The parameters are:
 * `url` {string}  - attachment absolute url.
 * `date` {Date|null}  - attachment create time. Defaults to current date.
 * `file` {string|null}  - attachment relative path if it exist.
-* `title` {string}  - attachment title.
+* `title` {string|null}  - attachment title. If none present, it will be generated from source url.
 * `author` {string|null}  - attachment uploader. Defaults to 'wordpress'.
 * `description` {string|null}  - attachment description. Defaults to empty string.
-* `post_id` {number}  - post id relate to the attachment.
+* `post_id` {number|null}  - post id relate to the attachment. Defaults to 0.
 * `comment_status` {string|null}  - attachment comment status, default is 'open', it can be 'open' or 'closed'.
 * `ping_status` {string|null}  - post ping status, default is 'open', it can be 'open' or 'closed'.
 * `meta_data` {string|null}  - other serialized attach meta data.
@@ -691,7 +697,6 @@ The parameters are:
 generator.addAttachment({
     url: 'https://i.imgur.com/B21m40g.png',
     title: 'Image',
-    post_id: 0
 });
 ```
 

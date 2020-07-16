@@ -93,6 +93,7 @@ module.exports = class Generator {
      * @param {string|null} term.value - used in attributes, term value.
      * @param {string|null} term.slug - term slug. If not provided, it will be generated from term title or value if it's an attribute.
      * @param {string} term.type - term type, can be 'category', 'product_cat', 'product_attribute', 'nav_menu' and 'tag'
+     * @param {number|string|null} term.image - ID or URL of image to set as category thumbnail. Used in categories. Default is null.
      * @param {number|null} term.parent_id - term parent id if it exists.
      * @param {string|null} term.description - description, usually empty string
      * @param {string|null} term.taxonomy - term taxonomy, used in attributes, if none present, it will be generated from term title, e.g. 'pa_weight'
@@ -822,15 +823,25 @@ module.exports = class Generator {
      * @param {string} name - category title, e.g. "Everything about JS"
      * @param {string|null} slug - category slug. Used in URLS, e.g. "js-rocks". If none present it will be generated from name.
      * @param {number|null} parent_id - category parent id if it existed.
+     * @param {number|string|null} image - ID or URL of image to set as category thumbnail. Default is null.
      * @return {Generator}
      */
     addProductCategory({
-       id = this.rId(),
-       name,
-       slug = this.generateSlug(name),
-       parent_id = 0
+        id = this.rId(),
+        name,
+        slug = this.generateSlug(name),
+        parent_id = 0,
+        image = null
     }) {
         if (!this.addedProductCategories.hasOwnProperty(name)) {
+            if (typeof image === 'string') {
+                const id = this.rId();
+                this.addAttachment({
+                    id,
+                    url: image,
+                });
+                image = id;
+            }
             let attribute = this.channel.ele('wp:term');
             attribute.ele('wp:term_id').cdata(id);
             attribute.ele('wp:term_taxonomy').cdata('product_cat');
@@ -838,6 +849,11 @@ module.exports = class Generator {
             attribute.ele('wp:term_name').cdata(name);
             if (parent_id) {
                 attribute.ele('wp:term_parent').cdata(parent_id);
+            }
+            if (Number.isInteger(image)) {
+                let attr = attribute.ele('wp:termmeta');
+                attr.ele('wp:meta_key').cdata('thumbnail_id');
+                attr.ele('wp:meta_value').cdata(image);
             }
             this.addedProductCategories[name] = id;
         }
@@ -888,10 +904,10 @@ module.exports = class Generator {
      * @param {string} url - attachment absolute url.
      * @param {Date|null} date - attachment create time. Defaults to current date.
      * @param {string|null} file - attachment relative path if it exist.
-     * @param {string} title - attachment title.
+     * @param {string|null} title - attachment title. If none present, it will be generated from source url.
      * @param {string|null} author - attachment uploader. Defaults to 'wordpress'.
      * @param {string|null} description - attachment description. Defaults to empty string.
-     * @param {number} post_id - post id relate to the attachment.
+     * @param {number|null} post_id - post id relate to the attachment. Defaults to 0.
      * @param {string|null} comment_status - attachment comment status, default is `open`, it can be `open` or `closed`.
      * @param {string|null} ping_status - post ping status, default is `open`, it can be `open` or `closed`.
      * @param {string|null} meta_data - other serialized attach meta data.
@@ -903,10 +919,10 @@ module.exports = class Generator {
         url,
         date = new Date(),
         file,
-        title,
+        title= this.getFileNameFromURL(url),
         author = 'wordpress',
         description = '',
-        post_id,
+        post_id = 0,
         comment_status = 'open',
         ping_status = 'closed',
         meta_data,
@@ -1174,6 +1190,14 @@ module.exports = class Generator {
     }
 
     /**
+     * Gets filename from URL.
+     * @param url
+     */
+    getFileNameFromURL(url) {
+        return url.substring(url.lastIndexOf('/')+1);
+    }
+
+    /**
      * Returns generated WMR(XML).
      *
      * @param {boolean} options.pretty - whether to pretty print the output or not. Defaults to false.
@@ -1214,6 +1238,13 @@ module.exports = class Generator {
                 if (term.type === 'category') {
                     catsToAdd.push(term);
                 } else if (term.type === 'product_cat') {
+                    if (term.hasOwnProperty('image') && typeof term.image === 'string') {
+                        const id = this.rId();
+                        this.setAttachmentToAdd({
+                            id, url: term.image
+                        });
+                        term.image = id;
+                    }
                     pCatsToAdd.push(term);
                 } else if (term.type === 'product_attribute') {
                     pAttrsToAdd.push(term);
